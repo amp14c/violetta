@@ -12,6 +12,8 @@ import RecommendedActions from '@/components/RecommendedActions';
 import NextReapplyBanner from '@/components/NextReapplyBanner';
 import HourlyUVChart from '@/components/HourlyUVChart';
 import IndoorOutdoorToggle from '@/components/IndoorOutdoorToggle';
+import SunscreenGuidance from '@/components/SunscreenGuidance';
+import EducationalTip from '@/components/EducationalTip';
 
 export default function HomePage() {
   const [prefs, setLocalPrefs] = useState<UserPreferences | null>(null);
@@ -102,6 +104,12 @@ export default function HomePage() {
 
       {/* Hourly chart */}
       <HourlyUVChart hourly={forecast.hourly} peakTime={forecast.peakTime} />
+
+      {/* Sunscreen guidance */}
+      <SunscreenGuidance />
+
+      {/* Educational tip */}
+      <EducationalTip />
 
       {/* Peak info */}
       {!prefs.indoorMode && (
