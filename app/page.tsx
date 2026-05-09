@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getPrefs, setPrefs } from '@/lib/storage';
 import { fetchUVForecast } from '@/lib/uv';
 import { getBrowserLocation } from '@/lib/location';
+import { runNotificationScheduler } from '@/lib/notificationScheduler';
 import type { UVForecast, UserPreferences } from '@/lib/types';
 import UVStatusCard from '@/components/UVStatusCard';
 import RecommendedActions from '@/components/RecommendedActions';
@@ -29,6 +30,7 @@ export default function HomePage() {
       }
       const data = await fetchUVForecast(loc.lat, loc.lon);
       setForecast(data);
+      runNotificationScheduler(data).catch(console.error);
     } catch (e) {
       setError((e as Error).message);
     } finally {
