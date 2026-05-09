@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPrefs, setPrefs } from '@/lib/storage';
 import { getBrowserLocation, geocodeQuery } from '@/lib/location';
+import { requestNotificationPermission } from '@/lib/notifications';
 import type { UserPreferences } from '@/lib/types';
 
 export default function SettingsPage() {
@@ -154,7 +155,14 @@ export default function SettingsPage() {
                 </div>
               </div>
               <button
-                onClick={() => update({ notificationsEnabled: !prefs.notificationsEnabled })}
+                onClick={async () => {
+                if (!prefs.notificationsEnabled) {
+                  const token = await requestNotificationPermission();
+                  if (!token) return; // permission denied — don't toggle on
+                } else {
+                  update({ notificationsEnabled: false });
+                }
+              }}
                 className={`w-12 h-6 rounded-full transition-all duration-200 relative ${
                   prefs.notificationsEnabled ? 'bg-violet-600' : 'bg-white/20'
                 }`}
