@@ -1,0 +1,135 @@
+[
+  {
+    "objectID": "path/methodology.html",
+    "href": "path/methodology.html",
+    "title": "PATH ridership: methodology & data",
+    "section": "",
+    "text": "← Back to the dashboard"
+  },
+  {
+    "objectID": "path/methodology.html#data-sources",
+    "href": "path/methodology.html#data-sources",
+    "title": "PATH ridership: methodology & data",
+    "section": "Data sources",
+    "text": "Data sources\n\n\n\nSource\nWhat it has\nFormat\nUsed for\n\n\n\n\nPATH Ridership Statistics, Port Authority of NY & NJ\nMonthly reports (2012–present) and hourly reports (2017–present, plus Jul 2014 and Nov 2016 snapshots), by station\nPDF only: no API, no CSV\nMain source for all charts\n\n\nFTA National Transit Database: Complete Monthly Ridership (PATH = NTD ID 20098) · NTD monthly ridership page\nMonthly system-wide unlinked trips, 2002–present\nCSV / API\nCross-check\n\n\nNY Open Data: PATH Monthly Ridership, Beginning 1996 (data.gov listing)\nMonthly system total in thousands. Stopped updating in 2016\nCSV / API\nCross-check\n\n\nNY Open Data: PATH Average Weekday & Weekend Ridership, Beginning 1996 (data.gov listing)\nAverage weekday and weekend ridership, system total. Stopped in 2016\nCSV / API\nNot used (covered by PDFs)\n\n\nAPTA Quarterly Ridership Reports (archive)\nQuarterly unlinked trips by agency (listed as “Port Authority of NY & NJ”, heavy rail)\nPDF\nNot used (quarterly, system only)\n\n\n\nWhy PDFs, when there are CSVs? The two free machine-readable sources don’t cover what this project needs. NY Open Data stopped in 2016. The National Transit Database is current but has system totals only, with no stations and no hours. The Port Authority’s PDFs are the only source with station-level and hourly detail up to the present. So the PDFs are the main source, and the CSV/API sources are used to check them.\nThe PDFs live at https://www.panynj.gov/content/dam/path/about/statistics/&lt;file&gt;.pdf. File names vary by year (2012_PATH_Ridership_Report, 2015-PATH-Ridership-Report, …-hourly-… vs …-Hourly-…), so scripts/01_download.py lists each one explicitly."
+  },
+  {
+    "objectID": "path/methodology.html#pipeline-step-by-step",
+    "href": "path/methodology.html#pipeline-step-by-step",
+    "title": "PATH ridership: methodology & data",
+    "section": "Pipeline: step by step",
+    "text": "Pipeline: step by step\n\n\n\n\n\n\n\n\n\nStep\nScript / file\nInput → output\nWhat it does\n\n\n\n\n1. Download\nscripts/01_download.py\nPANYNJ, NY Open Data and NTD URLs → data/raw/\nDownloads 15 monthly and 12 hourly PDF reports, plus the two CSV/API sources. Checks each PDF is valid and skips files already on disk.\n\n\n2. Parse monthly\nscripts/02_parse_monthly.py\ndata/raw/pdf/monthly_*.pdf → data/processed/path_monthly_by_station.csv, path_monthly_system.csv, crosscheck_system_totals.csv\nReads the PDF text layer (pdfplumber), finds each month’s page, extracts both station tables and the day-count row, standardises station names, validates, and compares with NY Open Data and NTD.\n\n\n3. Parse hourly\nscripts/03_parse_hourly.py\ndata/raw/pdf/hourly_*.pdf → data/processed/path_hourly.csv, hourly_parse_issues.csv\nReads every station page (section label, station, 24 hours × 8 columns) and reshapes it to a long “tidy” table. Any row it can’t parse is logged.\n\n\n4. Charts\npathviz.py\nprocessed CSVs → Plotly figures\nOne module defines every chart, so the dashboard and the presentation always match.\n\n\n5. Publish\npath/dashboard.qmd, path/slides.qmd, _quarto.yml\n→ website (_site/)\nQuarto renders the dashboard, slides and this page. GitHub Pages hosts them.\n\n\n\npython scripts/01_download.py      # step 1\npython scripts/02_parse_monthly.py # step 2\npython scripts/03_parse_hourly.py  # step 3\nquarto render                      # steps 4–5\n\nProblems the parser handles\n\nTwo tables per page. Each station appears twice on a monthly page: first as totals and averages, then as average-daily and totals by day type. The parser tells them apart by order.\nRenamed stations. “Pavonia/ Newport” → “Newport”, “WTC” → “World Trade Center”, “Christopher St.” → “Christopher Street”.\nSection labels change format across years (“January 2021”, “Jun 2025”, “2026-Jan”, “YTD 2019”, “2025 Annual”), and ASCII and Unicode hyphens are mixed.\nBlank holiday columns in months with no holiday (e.g. Mar, Apr and Aug 2026) leave 6 values per row instead of 8.\nOne-off snapshot reports (July 2014, November 2016) use slightly different headers.\nmacOS file names are case-insensitive, so Hourly.pdf and hourly.pdf would overwrite each other. Files are saved as hourly_2025.pdf etc."
+  },
+  {
+    "objectID": "path/methodology.html#validation",
+    "href": "path/methodology.html#validation",
+    "title": "PATH ridership: methodology & data",
+    "section": "Validation",
+    "text": "Validation\nAll checks run automatically every time the scripts run. A failed check stops the pipeline.\n\n\n\n\n\n\n\nCheck\nResult\n\n\n\n\nAll 13 stations present every month\n178 of 178 months\n\n\nStation rows add up exactly to the NY subtotal, NJ subtotal and system total printed in each PDF\nPassed for every month\n\n\nWeekday + Saturday + Sunday + holiday totals = monthly total (±2 for rounding)\nPassed for every station-month\n\n\nvs. NY Open Data (independent, 48 overlapping months)\nMedian difference 0.01%, max 0.33% (NY Open Data is rounded to thousands)\n\n\nvs. National Transit Database (independent, 177 months)\nNTD runs 6–11% higher every month, as expected, because NTD counts every boarding (unlinked trips). Month-to-month movements match.\n\n\nHourly: each page’s 24 hour-rows add up to its printed “Total” row\nAll 1,820 station-pages pass (±30 for rounding)\n\n\nHourly vs. monthly report: system weekday entries\nWithin 1.8% every year"
+  },
+  {
+    "objectID": "path/methodology.html#data-definitions",
+    "href": "path/methodology.html#data-definitions",
+    "title": "PATH ridership: methodology & data",
+    "section": "Data definitions",
+    "text": "Data definitions\nWhat is counted. Every number comes from PATH’s faregates, the turnstiles and TAPP gates riders pass through. There are two kinds of count:\n\n\n\n\n\n\n\n\n\nTerm\nWhat it means\nWhich station it describes\nWhere it’s used\n\n\n\n\nEntry (also “trip” or “ridership”)\nA person passing into the system through a faregate\nThe origin: the station where the trip starts\nMonthly data (all charts on the Overview and Monthly pages), and the hourly charts unless marked “exits”\n\n\nExit\nA person passing out through a faregate\nThe destination: the station where the trip ends\nHourly data only, where marked\n\n\n\nExample: someone who commutes from Hoboken to 33rd Street and back counts as an entry at Hoboken in the morning and an entry at 33rd Street in the evening. That’s two trips. Their morning exit is counted at 33rd Street.\nHow exits are counted. PATH riders tap in only. Nobody taps out, so exits don’t come from fare payments. The hourly reports are labelled “Turnstile Count” (through 2023) and “Legacy and TAPP Faregates Count” (from 2024). Exits are the number of people physically passing out through the exit turnstiles or faregates, and the gate counts each passage without charging. Because entries and exits aren’t linked to a card, the data can’t say where a particular rider went. There are no origin–destination pairs, only how many trips started and ended at each station.\nEntries vs. exits don’t match system-wide after 2021. Through 2019, system-wide weekday exits were within about 1% of entries, as expected. Since 2022 exits have run about 9–12% higher than entries. The reports don’t explain this. Possible reasons include entries that aren’t counted (cross-honor, freewheeled, fare evasion) and differences between the old and new gates. For this reason the dashboard uses entries for all ridership totals, and uses exits only to show when trips end.\nOther terms\n\nAverage weekday / Saturday / Sunday / holiday. Total entries on that type of day, divided by the number of those days in the month. Holidays are days PATH runs a holiday schedule, and they’re left out of the weekday, Saturday and Sunday averages.\nRush hours. In this project: 7–9 am and 5–7 pm (four one-hour periods).\nCross-honor. Tickets from other operators (e.g. NJ Transit) that PATH accepts during service disruptions. These are not included in the counts.\nFreewheeled entries. Excluded from 2024 on, per the report headers. The reports don’t define the term. It usually means gates set to free entry, with no fare charged.\nLegacy + TAPP. From 2023, counts combine the old turnstiles and PATH’s new contactless TAPP faregates.\nLinked vs. unlinked trips. The PATH reports count linked trips: one faregate entry per journey, even if the rider changes trains. The federal National Transit Database counts unlinked trips, meaning every boarding, so a transfer counts twice. That’s why NTD totals run about 6–11% higher than the PATH reports every month."
+  },
+  {
+    "objectID": "path/methodology.html#data-dictionary",
+    "href": "path/methodology.html#data-dictionary",
+    "title": "PATH ridership: methodology & data",
+    "section": "Data dictionary",
+    "text": "Data dictionary\n\ndata/processed/path_monthly_by_station.csv: one row per station per month.\n\n\n\n\n\n\n\n\nColumn\nType\nDescription\n\n\n\n\ndate\ndate\nFirst day of the month\n\n\nyear, month\nint\nCalendar year and month (1–12)\n\n\nstation\ntext\nStation name (13 stations)\n\n\nstate\ntext\nNJ or NY\n\n\ntotal\nint\nEntries in the month\n\n\navg_weekday, avg_saturday, avg_sunday, avg_holiday\nint\nAverage entries per day of that type\n\n\navg_daily\nint\nTotal ÷ days in the month\n\n\nweekday_total, saturday_total, sunday_total, holiday_total\nint\nTotal entries on all days of that type\n\n\nn_weekdays, n_saturdays, n_sundays, n_holidays\nint\nNumber of days of each type in the month\n\n\n\ndata/processed/path_monthly_system.csv: same columns, one row per month for the whole system (no station / state).\ndata/processed/path_hourly.csv: long format, one row per period × station × hour × day type × direction.\n\n\n\n\n\n\n\n\nColumn\nType\nDescription\n\n\n\n\nyear\nint\nReport year\n\n\nperiod\ntext\nmonth (one month) or annual (whole-year or year-to-date average)\n\n\nmonth\nint\n1–12 when period is month, blank otherwise\n\n\nstation\ntext\nStation name, or System-wide\n\n\nhour\nint\nHour of day, 0–23 (0 = midnight to 1 am)\n\n\nday_type\ntext\nweekday, saturday, sunday, holiday\n\n\ndirection\ntext\nentry (trip starts here) or exit (trip ends here)\n\n\navg_count\nint\nAverage number of people through the faregates in that hour\n\n\n\ndata/processed/crosscheck_system_totals.csv: monthly PDF totals next to NY Open Data (nyod_thousands) and NTD (upt, unlinked passenger trips), with % differences."
+  },
+  {
+    "objectID": "path/methodology.html#limitations",
+    "href": "path/methodology.html#limitations",
+    "title": "PATH ridership: methodology & data",
+    "section": "Limitations",
+    "text": "Limitations\n\nFaregate entries are not unique people. A daily commuter makes about 40 trips a month. Fare evasion, cross-honored and freewheeled entries are not counted.\nClosures show up as near-zero values, not as missing data. Examples: WTC and Exchange Place weekends in much of 2014, Hoboken in February 2025 (about 2,700 a weekday and zero on weekends), and low WTC weekend values in 2019. They’re real counts, but they pull averages down.\nHourly data starts in 2017, plus one-month snapshots for July 2014 and November 2016. Exits are only available in the hourly data.\nThe current year is partial (through the latest published month).\nFare-system change. The move from old turnstiles to TAPP faregates (2023–25) changed the counting equipment. Small shifts in that period may partly reflect measurement.\nRounding. The PDFs round averages to whole people, so sums of hourly values can be off by a few."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Data Projects Portfolio",
+    "section": "",
+    "text": "Hi, I’m AP. I’m a data analyst who likes taking messy public data and turning it into something people can explore. Each project below has an interactive dashboard, a short presentation of the findings, and a methodology page covering sources, definitions and limitations."
+  },
+  {
+    "objectID": "index.html#projects",
+    "href": "index.html#projects",
+    "title": "Data Projects Portfolio",
+    "section": "Projects",
+    "text": "Projects\n\nPATH train ridership, 2012–2026\nThe Port Authority publishes PATH ridership only as PDF reports, with no API or CSV. I built a pipeline that extracts 15 years of monthly and hourly data from 27 reports (over 2,000 pages). It validates the results against the reports’ own subtotals and two government datasets. The analysis covers how ridership collapsed in 2020, how it has recovered, and how the daily commute changed.\nOpen dashboard View presentation Methodology & data\nSkills: PDF data extraction · data validation · pandas · Plotly · Quarto · GitHub Pages"
+  },
+  {
+    "objectID": "index.html#about-this-site",
+    "href": "index.html#about-this-site",
+    "title": "Data Projects Portfolio",
+    "section": "About this site",
+    "text": "About this site\nBuilt with Python (pandas, pdfplumber, Plotly) and Quarto, and hosted on GitHub Pages. All code and clean datasets are on GitHub."
+  },
+  {
+    "objectID": "path/slides.html#the-question",
+    "href": "path/slides.html#the-question",
+    "title": "PATH ridership, 2012–2026",
+    "section": "The question",
+    "text": "The question\nPATH links Newark, Harrison, Jersey City and Hoboken with Manhattan. It has 13 stations and carried about 280,000 riders a weekday before 2020.\n\n\nWhat happened to PATH ridership?\n\nHow deep was the 2020 collapse?\nHow far has it recovered?\nHas the shape of the commute changed?\n\n\nThe catch: no usable data\nThe Port Authority publishes ridership only as PDFs, with no API and no CSV. The free datasets either stopped in 2016 (NY Open Data) or have no station or hourly detail (National Transit Database)."
+  },
+  {
+    "objectID": "path/slides.html#what-i-built",
+    "href": "path/slides.html#what-i-built",
+    "title": "PATH ridership, 2012–2026",
+    "section": "What I built",
+    "text": "What I built\n\n\n1 · Extract\nDownloaded 27 PDF reports (more than 2,000 pages) and parsed every table with Python (pdfplumber).\n\n2 · Validate\nEvery month’s stations add up exactly to the printed totals. The results match NY Open Data within 0.33%, and their movements track the federal NTD.\n\n3 · Publish\nClean CSVs, an interactive dashboard and these slides, all from one shared chart module so the numbers always match.\n\n\n\n\n\n\n\n\nReading the numbers\n\n\nA trip = one person entering through a faregate, counted at the station where the trip starts. Exits (where trips end) appear only in the hourly data."
+  },
+  {
+    "objectID": "path/slides.html#ridership-fell-67-in-2020-in-2025-it-was-74-of-2019",
+    "href": "path/slides.html#ridership-fell-67-in-2020-in-2025-it-was-74-of-2019",
+    "title": "PATH ridership, 2012–2026",
+    "section": "Ridership fell 67% in 2020; in 2025 it was 74% of 2019",
+    "text": "Ridership fell 67% in 2020; in 2025 it was 74% of 2019\n\n\n                            \n                                            \n\n\n\n82M trips in 2019 → 27M in 2020. Lowest month April 2020. Steady climb since."
+  },
+  {
+    "objectID": "path/slides.html#the-commute-is-smaller-and-less-concentrated",
+    "href": "path/slides.html#the-commute-is-smaller-and-less-concentrated",
+    "title": "PATH ridership, 2012–2026",
+    "section": "The commute is smaller and less concentrated",
+    "text": "The commute is smaller and less concentrated"
+  },
+  {
+    "objectID": "path/slides.html#rush-hours-carry-a-smaller-share-of-the-day-48.7-44.2",
+    "href": "path/slides.html#rush-hours-carry-a-smaller-share-of-the-day-48.7-44.2",
+    "title": "PATH ridership, 2012–2026",
+    "section": "Rush hours carry a smaller share of the day: 48.7% → 44.2%",
+    "text": "Rush hours carry a smaller share of the day: 48.7% → 44.2%\n\n\n                            \n                                            \n\n\n\nShare of weekday entries in 7–9 am and 5–7 pm. A flatter day suggests hybrid work and more off-peak travel."
+  },
+  {
+    "objectID": "path/slides.html#new-jersey-stations-start-the-day-new-york-stations-end-it",
+    "href": "path/slides.html#new-jersey-stations-start-the-day-new-york-stations-end-it",
+    "title": "PATH ridership, 2012–2026",
+    "section": "New Jersey stations start the day; New York stations end it",
+    "text": "New Jersey stations start the day; New York stations end it\n\n\n                            \n                                            \n\n\n\nEntries as a share of each station’s day. Every NJ station peaks at 7–8 am; every NY station peaks at 5 pm, the trip home."
+  },
+  {
+    "objectID": "path/slides.html#where-trips-start",
+    "href": "path/slides.html#where-trips-start",
+    "title": "PATH ridership, 2012–2026",
+    "section": "Where trips start",
+    "text": "Where trips start"
+  },
+  {
+    "objectID": "path/slides.html#limitations",
+    "href": "path/slides.html#limitations",
+    "title": "PATH ridership, 2012–2026",
+    "section": "Limitations",
+    "text": "Limitations\n\nEntries ≠ people. A daily commuter makes about 40 trips a month, and cross-honored and freewheeled entries are excluded.\nClosures look like near-zero values (e.g. Hoboken, Feb 2025), not missing data.\nHourly detail starts in 2017, plus two one-month snapshots (2014, 2016).\nFare-system change (TAPP, 2023–25) altered the counting equipment."
+  },
+  {
+    "objectID": "path/slides.html#explore-it-yourself",
+    "href": "path/slides.html#explore-it-yourself",
+    "title": "PATH ridership, 2012–2026",
+    "section": "Explore it yourself",
+    "text": "Explore it yourself\n\n\n\nInteractive dashboard: every chart, with filters and hover values\nMethodology & data: sources, pipeline, definitions, validation\nCode and clean CSVs on GitHub\n\n\nSources\n\nPANYNJ PATH ridership reports\nFTA National Transit Database\nNY Open Data / data.gov"
+  }
+]
