@@ -71,4 +71,10 @@ $link-color: #1c5cab;
 .kpi-t { font-size: 0.85rem; color: #52514e; font-weight: 500; }
 .kpi-v { font-size: 2.1rem; font-weight: 650; line-height: 1.1; margin: 2px 0; }
 .kpi-n { font-size: 0.78rem; color: #52514e; line-height: 1.3; }
+.kpi-v { white-space: nowrap; }
 @media (max-width: 900px) { .kpi-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .kpi-tile { padding: 10px 12px; gap: 8px; }
+  .kpi-tile > i { display: none; }
+  .kpi-v { font-size: 1.6rem; }
+}
