@@ -1,0 +1,37 @@
+# Rebuilds the data-portfolio site and publishes it to the gh-pages branch (GitHub Pages)
+# on every push to `main` that touches the portfolio. Pushes that only change the Next.js
+# app don't run it. Chart pages are pre-computed in _freeze/, so CI only needs
+# Quarto (no Python). After changing pathviz.py or the data, re-render locally (delete
+# _freeze/ first) and commit _freeze/ so CI picks up the new output.
+name: Publish portfolio site
+
+on:
+  push:
+    branches: [main, portfolio]
+    paths:
+      - "_quarto.yml"
+      - "index.qmd"
+      - "path/**"
+      - "styles/**"
+      - "_freeze/**"
+      - "data/processed/**"
+      - "pathviz.py"
+      - ".github/workflows/publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.8.25
+      - uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

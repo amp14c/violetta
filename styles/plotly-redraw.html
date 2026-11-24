@@ -1,0 +1,20 @@
+<script>
+// Plotly measures legend/label text when it first draws. In dashboards and slides the
+// charts are drawn before their container is laid out, so redraw once the page (and
+// web fonts) are ready, and whenever a dashboard tab or slide becomes visible.
+(function () {
+  function redraw() {
+    if (!window.Plotly) return;
+    document.querySelectorAll(".js-plotly-plot").forEach(function (el) {
+      if (el.offsetParent !== null) { window.Plotly.relayout(el, {}); }
+    });
+  }
+  window.addEventListener("load", function () { setTimeout(redraw, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+  document.addEventListener("shown.bs.tab", function () { setTimeout(redraw, 50); });
+  if (window.Reveal) window.Reveal.on && window.Reveal.on("slidechanged", redraw);
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.Reveal && window.Reveal.on) window.Reveal.on("slidechanged", redraw);
+  });
+})();
+</script>

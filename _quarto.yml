@@ -1,0 +1,41 @@
+project:
+  type: website
+  output-dir: _site
+  execute-dir: project
+  render:
+    - index.qmd
+    - path/dashboard.qmd
+    - path/slides.qmd
+    - path/methodology.qmd
+
+website:
+  title: "AP · Data Portfolio"
+  site-url: https://amp14c.github.io/violetta
+  repo-url: https://github.com/amp14c/violetta/tree/portfolio
+  page-navigation: true
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: "PATH Ridership"
+        menu:
+          - href: path/dashboard.qmd
+            text: "Dashboard"
+          - href: path/slides.qmd
+            text: "Presentation"
+          - href: path/methodology.qmd
+            text: "Methodology & data"
+    right:
+      - icon: github
+        href: https://github.com/amp14c/violetta/tree/portfolio 
+        aria-label: GitHub
+
+format:
+  html:
+    theme:
+      light: [cosmo, styles/custom.scss]
+    toc: true
+
+execute:
+  freeze: auto
+  warning: false
