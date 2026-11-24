@@ -1,5 +1,8 @@
 # violetta: AP's projects
 
+> ### 📊 [Open the PATH Ridership Dashboard →](https://amp14c.github.io/violetta/path/dashboard.html)
+> [Presentation](https://amp14c.github.io/violetta/path/slides.html) · [Methodology & data](https://amp14c.github.io/violetta/path/methodology.html) · [Portfolio home](https://amp14c.github.io/violetta/)
+
 This repository holds two independent projects:
 
 | Project | Where | Deployed to |
