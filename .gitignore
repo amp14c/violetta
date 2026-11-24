@@ -1,0 +1,20 @@
+.venv/
+_book/
+.quarto/
+__pycache__/
+*.quarto_ipynb
+.DS_Store
+.claude/settings.local.json
+
+/.quarto/
+**/*.quarto_ipynb
+_site/
+
+# Local tool settings
+.claude/
+
+# PATH source PDFs (public, ~23 MB): re-download with scripts/01_download.py
+data/raw/pdf/
+
+# Citi Bike raw downloads and working database (large)
+data/raw/citibike/

@@ -1,0 +1,274 @@
+---
+title: "PATH Ridership Dashboard"
+subtitle: "2012 – present · Port Authority Trans-Hudson"
+format:
+  dashboard:
+    orientation: rows
+    scrolling: true
+    theme: [cosmo, ../styles/custom.scss]
+    include-after-body: ../styles/plotly-redraw.html
+    nav-buttons:
+      - icon: house
+        href: ../index.html
+        aria-label: Portfolio home
+      - icon: easel
+        href: slides.html
+        aria-label: Presentation
+      - icon: book
+        href: methodology.html
+        aria-label: Methodology
+---
+
+```{python}
+#| include: false
+import sys; sys.path.insert(0, ".")
+import pathviz as pv
+
+sysm, st, h = pv.monthly_system(), pv.monthly_station(), pv.hourly()
+k = pv.headline(sysm, h)
+```
+
+# Overview
+
+## Row {height=165px}
+
+```{python}
+pv.kpi_tiles(k)
+```
+
+## Row {height=470px}
+
+::: {.card title="About PATH and this data" width="35%"}
+**PATH** (Port Authority Trans-Hudson) is the rapid-transit line linking Newark, Harrison,
+Jersey City and Hoboken with Lower and Midtown Manhattan. It has **13 stations**: 7 in
+<span class="legend-chip" style="background:#2a78d6"></span>New Jersey and 6 in
+<span class="legend-chip" style="background:#eb6834"></span>New York.
+
+**The data problem.** The Port Authority publishes ridership only as
+[PDF reports](https://www.panynj.gov/path/en/about/stats.html), with **no API and no CSV**.
+Free machine-readable copies exist on [data.gov / NY Open Data](https://data.ny.gov/d/v5t9-im68),
+which stopped in 2016, and the federal [National Transit Database](https://data.transportation.gov/d/8bui-9xvu),
+which has system totals only. Neither has station or hourly detail.
+
+**What I built.** A Python pipeline that downloads 27 PDF reports, extracts every table,
+and checks the numbers against the reports' own subtotals and both government datasets.
+See the *Data & definitions* tab.
+
+**What the numbers mean.** Unless a chart says *exits*, every number is **entries**:
+people passing through a faregate **into** PATH. An entry is counted at the station where
+the trip **starts**.
+:::
+
+```{python}
+#| title: "Ridership over time"
+pv.show(pv.fig_system_trend(sysm, height=430))
+```
+
+## Row {height=540px}
+
+```{python}
+#| title: "Busiest stations"
+pv.show(pv.fig_station_totals(st, height=500))
+```
+
+::: {.card title="How to read this" width="30%"}
+Each bar shows how many people **enter PATH at that station** on an average weekday,
+averaged over the latest 12 months.
+
+This is where trips **start** (the origin), **not** where they end. A commuter from Journal
+Square to WTC adds one entry to Journal Square in the morning and one entry to WTC on the
+way home.
+
+<span class="legend-chip" style="background:#2a78d6"></span>**Blue** = New Jersey station ·
+<span class="legend-chip" style="background:#eb6834"></span>**Orange** = New York station
+
+**World Trade Center** and **33rd Street** are the busiest New York stations, mostly from
+the evening trip home. **Journal Square**, **Hoboken** and **Newark** lead in New Jersey,
+mostly from the morning commute.
+:::
+
+# Monthly
+
+## Row {height=560px}
+
+```{python}
+#| title: "Seasonality and the 2020 break"
+pv.show(pv.fig_heatmap(sysm, height=520))
+```
+
+::: {.card title="Reading the heatmap" width="28%"}
+Each cell is **one month's total entries** across all stations. Darker cells mean more trips.
+
+* **Read across a row** to see a year's seasonal pattern: dips in December and summer,
+  busy spring and fall months.
+* **Read down a column** to compare the same month across years.
+* The pale band from **April 2020** is the pandemic. Later rows show the gradual recovery.
+* **Late 2012** is pale because of **Hurricane Sandy**, which flooded PATH tunnels and
+  stations in October 2012.
+
+Hover any cell for the exact number.
+:::
+
+## Row {height=640px}
+
+```{python}
+#| title: "Station explorer: pick one or more stations"
+pv.picker_monthly(st, height=460)
+```
+
+::: {.card title="About this chart" width="26%"}
+Tick any number of stations, or use **All stations**, **All NJ** or **All NY**. Each
+line is labelled with its station name at the right end, and hovering shows every
+selected station's value for that month.
+
+What's plotted is the number of people **entering at that station**, which is where
+their trip **starts**. Use **Measure** to switch between average weekday, Saturday or
+Sunday, or the monthly total.
+
+<span class="legend-chip" style="background:#2a78d6"></span>**Blue** = New Jersey ·
+<span class="legend-chip" style="background:#eb6834"></span>**Orange** = New York
+
+Sudden drops to near zero are **station closures** (e.g. Hoboken, Feb 2025), not missing
+data.
+:::
+
+# Hourly
+
+## Row {height=470px}
+
+```{python}
+#| title: "A day on PATH: before, during and after the pandemic"
+pv.show(pv.fig_day_curve(h, height=430))
+```
+
+```{python}
+#| title: "Is the rush hour coming back?"
+pv.show(pv.fig_peak_share(h, height=430))
+```
+
+## Row {height=110px}
+
+::: {.card}
+**Left:** people entering PATH each hour, system-wide, for 2019 (dotted grey), 2021 and
+the latest full year (blue). Use the menu to switch weekday, Saturday or Sunday. The
+morning and evening peaks are still there but much lower. **Right:** the share of all
+weekday entries that happen in the four rush hours. Lower means trips are spread more
+evenly through the day. It has **not** returned to pre-2020 levels.
+:::
+
+## Row {height=560px}
+
+```{python}
+#| title: "Where trips start and end, by hour"
+pv.show(pv.fig_station_hour(h, height=520))
+```
+
+::: {.card title="Entries vs. exits" width="30%"}
+Use the menu to switch between:
+
+* **Entries: trip starts here.** People going *into* PATH at this station.
+* **Exits: trip ends here.** People coming *out* of PATH at this station.
+
+Each row shows a station's day as **percentages of its daily total**, so small and large
+stations can be compared. The white line separates the 7 **NJ** stations (top) from the
+6 **NY** stations (bottom).
+
+**The pattern:** every NJ station has its busiest *entry* hour in the morning, as people
+leave home. Every NY station has its busiest *entry* hour around 5 pm, as people head back.
+Switch to *Exits* to see the mirror image.
+:::
+
+## Row {height=700px}
+
+```{python}
+#| title: "Every month since 2017, hour by hour (weekdays, all stations, entries)"
+pv.show(pv.fig_hour_month(h, height=660))
+```
+
+## Row {height=640px}
+
+```{python}
+#| title: "Hourly station explorer: pick one or more stations"
+pv.picker_hourly(h, height=460)
+```
+
+::: {.card title="About this chart" width="26%"}
+Pick stations, a **period** (every year since 2017, plus the July 2014 and November 2016
+one-month snapshots), a **day type**, and whether to show:
+
+* **Entries**: people *starting* their trip at the station
+* **Exits**: people *ending* their trip there
+
+At a home station (most of NJ), entries peak in the morning and exits in the evening.
+At a work station (most of Manhattan), it's the reverse. For the gap between the two,
+see the **Entries vs. exits** tab.
+:::
+
+# Entries vs. exits
+
+## Row {height=150px}
+
+::: {.card title="Do as many people leave a station as enter it?"}
+For each station this compares the average weekday **entries** (trips that **start**
+there) with **exits** (trips that **end** there). Riders only tap in, so exits are counted
+by the **exit turnstiles and faregates**, with no fare involved. Over a whole day, a busy
+station's entries and exits should be roughly equal, because most people make a round
+trip. Big gaps point to something the counts aren't capturing. Use the menu on the
+slope chart to switch between periods. The heatmap shows every period at once.
+:::
+
+## Row {height=660px}
+
+```{python}
+#| title: "Slope chart: entries → exits (steeper line = bigger gap; bold lines differ by 20%+)"
+pv.show(pv.fig_entry_exit_slope(h, height=620))
+```
+
+## Row {height=560px}
+
+```{python}
+#| title: "Every period at once: exits vs. entries (% difference)"
+pv.show(pv.fig_entry_exit_heatmap(h, height=520))
+```
+
+::: {.card title="What stands out" width="28%"}
+<span class="legend-chip" style="background:#a8282a"></span>**Red** = more exits than
+entries · <span class="legend-chip" style="background:#184f95"></span>**Blue** = fewer
+exits than entries · * = one-month snapshot.
+
+* **Before 2020, entries and exits matched closely.** Most stations were within ±5%, and
+  the system as a whole within ±1%.
+* **Since 2020, exits exceed entries at most stations.** System-wide the gap is about
+  +10%, and it's largest at 23rd St, 14th St, 9th St and Newark (+26% to +39% in 2025).
+* **33rd Street is the exception every year:** consistently 9–29% *fewer* exits than
+  entries.
+* **The reports don't explain the gaps.** Possible reasons include entries that aren't
+  counted (cross-honor, freewheeled entries, fare evasion), riders leaving through exits
+  that aren't counted, and the move to new TAPP faregates. Treat these as open questions,
+  not conclusions.
+:::
+
+# Data & definitions
+
+## Row
+
+::: {.card title="Data definitions: what the numbers mean"}
+{{< include _definitions.qmd >}}
+:::
+
+## Row
+
+::: {.card title="Data sources"}
+{{< include _sources.qmd >}}
+
+**Coverage used here:** monthly by station from
+`{python} f"{k['first']:%B %Y}"` to `{python} f"{k['last']:%B %Y}"`, and hourly by station
+from January 2017 (plus July 2014 and November 2016 snapshots). Full pipeline and
+validation details are on the [methodology page](methodology.qmd).
+:::
+
+## Row
+
+::: {.card title="Limitations"}
+{{< include _limitations.qmd >}}
+:::

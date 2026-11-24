@@ -1,0 +1,130 @@
+---
+title: "PATH ridership: methodology & data"
+subtitle: "Sources, pipeline steps, definitions, validation and limitations"
+toc: true
+toc-depth: 2
+---
+
+```{python}
+#| echo: false
+import sys; sys.path.insert(0, ".")
+import pandas as pd
+import pathviz as pv
+sysm, st, h = pv.monthly_system(), pv.monthly_station(), pv.hourly()
+cc = pd.read_csv("data/processed/crosscheck_system_totals.csv")
+nyod = cc.diff_nyod_pct.dropna().abs()
+ntd = cc.diff_ntd_pct.dropna()
+hs = h[(h.station == "System-wide") & (h.period == "annual") & (h.day_type == "weekday")
+       & (h.direction == "entry")].groupby("year").avg_count.sum()
+ms = sysm.groupby("year").avg_weekday.mean()
+xh = ((hs / ms[hs.index] - 1).abs() * 100)
+pages = h.groupby(["year", "period", "month", "station"], dropna=False).ngroups
+```
+
+[← Back to the dashboard](dashboard.qmd)
+
+## Data sources
+
+{{< include _sources.qmd >}}
+
+**Why PDFs, when there are CSVs?** The two free machine-readable sources don't cover what
+this project needs. NY Open Data **stopped in 2016**. The National Transit Database is
+current but has **system totals only**, with no stations and no hours. The Port
+Authority's PDFs are the only source with station-level and hourly detail up to the
+present. So the PDFs are the main source, and the CSV/API sources are used to check them.
+
+The PDFs live at `https://www.panynj.gov/content/dam/path/about/statistics/<file>.pdf`.
+File names vary by year (`2012_PATH_Ridership_Report`, `2015-PATH-Ridership-Report`,
+`…-hourly-…` vs `…-Hourly-…`), so `scripts/01_download.py` lists each one explicitly.
+
+## Pipeline: step by step
+
+| Step | Script / file | Input → output | What it does |
+|---|---|---|---|
+| 1. Download | `scripts/01_download.py` | PANYNJ, NY Open Data and NTD URLs → `data/raw/` | Downloads 15 monthly and 12 hourly PDF reports, plus the two CSV/API sources. Checks each PDF is valid and skips files already on disk. |
+| 2. Parse monthly | `scripts/02_parse_monthly.py` | `data/raw/pdf/monthly_*.pdf` → `data/processed/path_monthly_by_station.csv`, `path_monthly_system.csv`, `crosscheck_system_totals.csv` | Reads the PDF text layer (`pdfplumber`), finds each month's page, extracts both station tables and the day-count row, standardises station names, validates, and compares with NY Open Data and NTD. |
+| 3. Parse hourly | `scripts/03_parse_hourly.py` | `data/raw/pdf/hourly_*.pdf` → `data/processed/path_hourly.csv`, `hourly_parse_issues.csv` | Reads every station page (section label, station, 24 hours × 8 columns) and reshapes it to a long "tidy" table. Any row it can't parse is logged. |
+| 4. Charts | `pathviz.py` | processed CSVs → Plotly figures | One module defines every chart, so the dashboard and the presentation always match. |
+| 5. Publish | `path/dashboard.qmd`, `path/slides.qmd`, `_quarto.yml` | → website (`_site/`) | Quarto renders the dashboard, slides and this page. GitHub Pages hosts them. |
+
+```bash
+python scripts/01_download.py      # step 1
+python scripts/02_parse_monthly.py # step 2
+python scripts/03_parse_hourly.py  # step 3
+quarto render                      # steps 4–5
+```
+
+### Problems the parser handles
+
+* **Two tables per page.** Each station appears twice on a monthly page: first as totals
+  and averages, then as average-daily and totals by day type. The parser tells them
+  apart by order.
+* **Renamed stations.** "Pavonia/ Newport" → "Newport", "WTC" → "World Trade Center",
+  "Christopher St." → "Christopher Street".
+* **Section labels change format** across years ("January 2021", "Jun 2025", "2026-Jan",
+  "YTD 2019", "2025 Annual"), and ASCII and Unicode hyphens are mixed.
+* **Blank holiday columns** in months with no holiday (e.g. Mar, Apr and Aug 2026) leave
+  6 values per row instead of 8.
+* **One-off snapshot reports** (July 2014, November 2016) use slightly different headers.
+* **macOS file names are case-insensitive**, so `Hourly.pdf` and `hourly.pdf` would
+  overwrite each other. Files are saved as `hourly_2025.pdf` etc.
+
+## Validation
+
+All checks run automatically every time the scripts run. A failed check stops the pipeline.
+
+| Check | Result |
+|---|---|
+| All 13 stations present every month | `{python} f"{st.groupby('date').station.nunique().eq(13).sum()}"` of `{python} f"{st.date.nunique()}"` months |
+| Station rows add up exactly to the NY subtotal, NJ subtotal and system total printed in each PDF | Passed for every month |
+| Weekday + Saturday + Sunday + holiday totals = monthly total (±2 for rounding) | Passed for every station-month |
+| vs. NY Open Data (independent, `{python} f"{len(nyod)}"` overlapping months) | Median difference `{python} f"{nyod.median():.2f}%"`, max `{python} f"{nyod.max():.2f}%"` (NY Open Data is rounded to thousands) |
+| vs. National Transit Database (independent, `{python} f"{len(ntd)}"` months) | NTD runs `{python} f"{-ntd.quantile(0.9):.0f}–{-ntd.quantile(0.1):.0f}%"` higher every month, as expected, because NTD counts every boarding (unlinked trips). Month-to-month movements match. |
+| Hourly: each page's 24 hour-rows add up to its printed "Total" row | All `{python} f"{pages:,}"` station-pages pass (±30 for rounding) |
+| Hourly vs. monthly report: system weekday entries | Within `{python} f"{xh.max():.1f}%"` every year |
+
+## Data definitions
+
+{{< include _definitions.qmd >}}
+
+## Data dictionary
+
+::: {.dict}
+**`data/processed/path_monthly_by_station.csv`**: one row per station per month.
+
+| Column | Type | Description |
+|---|---|---|
+| `date` | date | First day of the month |
+| `year`, `month` | int | Calendar year and month (1–12) |
+| `station` | text | Station name (13 stations) |
+| `state` | text | `NJ` or `NY` |
+| `total` | int | Entries in the month |
+| `avg_weekday`, `avg_saturday`, `avg_sunday`, `avg_holiday` | int | Average entries per day of that type |
+| `avg_daily` | int | Total ÷ days in the month |
+| `weekday_total`, `saturday_total`, `sunday_total`, `holiday_total` | int | Total entries on all days of that type |
+| `n_weekdays`, `n_saturdays`, `n_sundays`, `n_holidays` | int | Number of days of each type in the month |
+
+**`data/processed/path_monthly_system.csv`**: same columns, one row per month for the whole
+system (no `station` / `state`).
+
+**`data/processed/path_hourly.csv`**: long format, one row per period × station × hour ×
+day type × direction.
+
+| Column | Type | Description |
+|---|---|---|
+| `year` | int | Report year |
+| `period` | text | `month` (one month) or `annual` (whole-year or year-to-date average) |
+| `month` | int | 1–12 when `period` is `month`, blank otherwise |
+| `station` | text | Station name, or `System-wide` |
+| `hour` | int | Hour of day, 0–23 (0 = midnight to 1 am) |
+| `day_type` | text | `weekday`, `saturday`, `sunday`, `holiday` |
+| `direction` | text | `entry` (trip starts here) or `exit` (trip ends here) |
+| `avg_count` | int | Average number of people through the faregates in that hour |
+
+**`data/processed/crosscheck_system_totals.csv`**: monthly PDF totals next to NY Open Data
+(`nyod_thousands`) and NTD (`upt`, unlinked passenger trips), with % differences.
+:::
+
+## Limitations
+
+{{< include _limitations.qmd >}}

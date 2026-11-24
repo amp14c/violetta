@@ -1,0 +1,43 @@
+**What is counted.** Every number comes from PATH's **faregates**, the turnstiles and
+TAPP gates riders pass through. There are two kinds of count:
+
+| Term | What it means | Which station it describes | Where it's used |
+|---|---|---|---|
+| **Entry** (also "trip" or "ridership") | A person passing *into* the system through a faregate | The **origin**: the station where the trip **starts** | Monthly data (all charts on the Overview and Monthly pages), and the hourly charts unless marked "exits" |
+| **Exit** | A person passing *out* through a faregate | The **destination**: the station where the trip **ends** | Hourly data only, where marked |
+
+*Example:* someone who commutes from Hoboken to 33rd Street and back counts as an
+**entry at Hoboken** in the morning and an **entry at 33rd Street** in the evening. That's
+two trips. Their morning **exit** is counted at 33rd Street.
+
+**How exits are counted.** PATH riders tap in only. Nobody taps out, so exits **don't
+come from fare payments**. The hourly reports are labelled *"Turnstile Count"* (through
+2023) and *"Legacy and TAPP Faregates Count"* (from 2024). Exits are the number of people
+physically passing **out through the exit turnstiles or faregates**, and the gate counts
+each passage without charging. Because entries and exits aren't linked to a card, the data
+**can't say where a particular rider went**. There are no origin–destination pairs, only
+how many trips started and ended at each station.
+
+**Entries vs. exits don't match system-wide after 2021.** Through 2019, system-wide
+weekday exits were within about 1% of entries, as expected. Since 2022 exits have run
+**about 9–12% higher** than entries. The reports don't explain this. Possible reasons
+include entries that aren't counted (cross-honor, freewheeled, fare evasion) and
+differences between the old and new gates. For this reason the dashboard uses **entries**
+for all ridership totals, and uses exits only to show *when* trips end.
+
+**Other terms**
+
+* **Average weekday / Saturday / Sunday / holiday.** Total entries on that type of day,
+  divided by the number of those days in the month. **Holidays** are days PATH runs a
+  holiday schedule, and they're left out of the weekday, Saturday and Sunday averages.
+* **Rush hours.** In this project: 7–9 am and 5–7 pm (four one-hour periods).
+* **Cross-honor.** Tickets from other operators (e.g. NJ Transit) that PATH accepts during
+  service disruptions. These are **not** included in the counts.
+* **Freewheeled entries.** Excluded from 2024 on, per the report headers. The reports don't
+  define the term. It usually means gates set to free entry, with no fare charged.
+* **Legacy + TAPP.** From 2023, counts combine the old turnstiles and PATH's new contactless
+  **TAPP** faregates.
+* **Linked vs. unlinked trips.** The PATH reports count *linked* trips: one faregate entry
+  per journey, even if the rider changes trains. The federal National Transit Database
+  counts *unlinked* trips, meaning every boarding, so a transfer counts twice. That's why
+  NTD totals run about 6–11% higher than the PATH reports every month.

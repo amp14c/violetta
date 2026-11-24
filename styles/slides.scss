@@ -1,0 +1,15 @@
+/*-- scss:defaults --*/
+$presentation-font-size-root: 30px;
+$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+$presentation-heading-font: "Inter", system-ui, sans-serif;
+$presentation-heading-color: #0b0b0b;
+$presentation-heading-font-weight: 650;
+$body-color: #1f1f1d;
+$link-color: #1c5cab;
+
+/*-- scss:rules --*/
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650&display=swap");
+
+.reveal h2 { font-size: 1.35em; letter-spacing: -0.01em; }
+.reveal h3 { font-size: 0.95em; color: #2a78d6; }
+.reveal .slide-number, .reveal .footer { font-size: 0.5em; }

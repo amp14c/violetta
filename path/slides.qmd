@@ -1,0 +1,145 @@
+---
+title: "PATH ridership, 2012–2026"
+subtitle: "What 15 years of faregate data say about how New Jersey commutes to Manhattan"
+author: "AP"
+format:
+  revealjs:
+    theme: [default, ../styles/slides.scss]
+    slide-number: true
+    transition: fade
+    width: 1280
+    height: 760
+    margin: 0.06
+    controls: true
+    hash: true
+    include-after-body: ../styles/plotly-redraw.html
+    footer: "[Dashboard](dashboard.html) · [Methodology](methodology.html) · [Portfolio](../index.html)"
+execute:
+  echo: false
+---
+
+```{python}
+import sys; sys.path.insert(0, ".")
+import pathviz as pv
+sysm, st, h = pv.monthly_system(), pv.monthly_station(), pv.hourly()
+k = pv.headline(sysm, h)
+```
+
+## The question
+
+**PATH** links Newark, Harrison, Jersey City and Hoboken with Manhattan. It has 13
+stations and carried about **280,000 riders a weekday** before 2020.
+
+::: {.columns}
+::: {.column width="50%"}
+### What happened to PATH ridership?
+
+* How deep was the 2020 collapse?
+* How far has it recovered?
+* Has the *shape* of the commute changed?
+:::
+::: {.column width="50%"}
+### The catch: no usable data
+
+The Port Authority publishes ridership **only as PDFs**, with no API and no CSV. The free
+datasets either **stopped in 2016** (NY Open Data) or have **no station or hourly
+detail** (National Transit Database).
+:::
+:::
+
+## What I built {.smaller}
+
+::: {.columns}
+::: {.column width="33%"}
+### 1 · Extract
+Downloaded **27 PDF reports** (more than 2,000 pages) and parsed every table with Python
+(`pdfplumber`).
+:::
+::: {.column width="33%"}
+### 2 · Validate
+Every month's stations add up **exactly** to the printed totals. The results match NY Open
+Data within **0.33%**, and their movements track the federal NTD.
+:::
+::: {.column width="33%"}
+### 3 · Publish
+Clean CSVs, an **interactive dashboard** and these slides, all from **one shared chart
+module** so the numbers always match.
+:::
+:::
+
+. . .
+
+::: {.callout-note}
+## Reading the numbers
+A **trip** = one person entering through a faregate, counted at the station where the trip
+**starts**. Exits (where trips **end**) appear only in the hourly data.
+:::
+
+## Ridership fell `{python} f"{k['drop']:.0f}%"` in 2020; in `{python} k['latest']` it was `{python} f"{k['pct']:.0f}%"` of 2019
+
+```{python}
+pv.show(pv.fig_system_trend(sysm, height=520))
+```
+
+::: {.notes}
+82M trips in 2019 → 27M in 2020. Lowest month April 2020. Steady climb since.
+:::
+
+## The commute is smaller *and* less concentrated
+
+```{python}
+pv.show(pv.fig_day_curve(h, height=540))
+```
+
+## Rush hours carry a smaller share of the day: `{python} f"{k['peak2019']:.1f}%"` → `{python} f"{k['peak_latest']:.1f}%"`
+
+```{python}
+pv.show(pv.fig_peak_share(h, height=520))
+```
+
+::: {.notes}
+Share of weekday entries in 7–9 am and 5–7 pm. A flatter day suggests hybrid work and
+more off-peak travel.
+:::
+
+## New Jersey stations start the day; New York stations end it
+
+```{python}
+pv.show(pv.fig_station_hour(h, height=540, toggle=False))
+```
+
+::: {.notes}
+Entries as a share of each station's day. Every NJ station peaks at 7–8 am; every NY
+station peaks at 5 pm, the trip home.
+:::
+
+## Where trips start
+
+```{python}
+pv.show(pv.fig_station_totals(st, height=540))
+```
+
+## Limitations
+
+* **Entries ≠ people.** A daily commuter makes about 40 trips a month, and cross-honored and
+  freewheeled entries are excluded.
+* **Closures look like near-zero values** (e.g. Hoboken, Feb 2025), not missing data.
+* **Hourly detail starts in 2017**, plus two one-month snapshots (2014, 2016).
+* **Fare-system change** (TAPP, 2023–25) altered the counting equipment.
+
+## Explore it yourself
+
+::: {.columns}
+::: {.column width="50%"}
+* [**Interactive dashboard**](dashboard.html): every chart, with filters and hover values
+* [**Methodology & data**](methodology.html): sources, pipeline, definitions, validation
+* [**Code and clean CSVs**](https://github.com/amp14c/violetta/tree/portfolio) on GitHub
+:::
+::: {.column width="50%"}
+**Sources**
+
+* [PANYNJ PATH ridership reports](https://www.panynj.gov/path/en/about/stats.html)
+* [FTA National Transit Database](https://data.transportation.gov/d/8bui-9xvu)
+* [NY Open Data / data.gov](https://data.ny.gov/d/v5t9-im68)
+:::
+:::

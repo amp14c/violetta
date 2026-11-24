@@ -1,0 +1,36 @@
+---
+title: "Data Projects Portfolio"
+toc: false
+---
+
+<!-- TODO: replace with a short bio: who you are, the roles you're looking for,
+and how to reach you (LinkedIn / email / GitHub). -->
+
+Hi, I'm **AP**. I'm a data analyst who likes taking messy public data and
+turning it into something people can explore. Each project below has an
+**interactive dashboard**, a **short presentation** of the findings, and a
+**methodology page** covering sources, definitions and limitations.
+
+## Projects
+
+::: {.project-card}
+### PATH train ridership, 2012–2026
+
+The Port Authority publishes PATH ridership only as PDF reports, with no API or CSV.
+I built a pipeline that extracts 15 years of monthly and hourly data from 27 reports
+(over 2,000 pages). It validates the results against the reports' own subtotals and
+two government datasets. The analysis covers how ridership collapsed in 2020, how it
+has recovered, and how the daily commute changed.
+
+[Open dashboard](path/dashboard.qmd){.btn .btn-primary}
+[View presentation](path/slides.qmd){.btn .btn-outline-primary}
+[Methodology & data](path/methodology.qmd){.btn .btn-outline-secondary}
+
+**Skills:** PDF data extraction · data validation · pandas · Plotly · Quarto · GitHub Pages
+:::
+
+## About this site
+
+Built with **Python** (pandas, pdfplumber, Plotly) and **Quarto**, and hosted on
+**GitHub Pages**. All code and clean datasets are on
+[GitHub](https://github.com/amp14c/violetta/tree/portfolio).
