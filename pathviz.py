@@ -132,10 +132,26 @@ def fig_system_trend(sysm: pd.DataFrame, height: int = 400) -> go.Figure:
     fig.add_scatter(x=roll.index, y=roll, name="12-month average", mode="lines",
                     line=dict(color=BLUE, width=2.5),
                     hovertemplate="12-month avg: %{y:,.0f}<extra></extra>")
-    for d, label in [("2012-10-29", "Hurricane Sandy"), ("2020-03-01", "COVID-19")]:
+    events = [("2012-10-29", "Hurricane Sandy", "left"),
+              ("2020-03-01", "COVID-19", "left"),
+              # Tournament ran Jun 11 – Jul 19, 2026; the final was at MetLife Stadium, NJ.
+              # Label sits left of the line so it stays inside the chart's right edge.
+              ("2026-06-11", "FIFA World Cup", "right")]
+    for d, *_ in events:
         fig.add_vline(x=d, line=dict(color=EVENT, width=2, dash="dash"))
-        fig.add_annotation(x=d, y=1, yref="paper", text=f"<b>{label}</b>", showarrow=False,
-                           xanchor="left", xshift=5, font=dict(size=13, color=EVENT))
+    # Labels as a text-only trace, not annotations: Plotly (4.1 in these pages) measures
+    # annotation widths as ~0 here, which centres them on the line and clips the last one.
+    # Scatter text is anchored natively ("middle right" = starts at the point).
+    top = s.max() * 1.07
+    fig.add_scatter(
+        x=[pd.Timestamp(d) for d, *_ in events], y=[top] * len(events),
+        text=[f" <b>{label}</b>" if side == "left" else f"<b>{label}</b> "
+              for _, label, side in events],  # non-breaking space = gap from the line
+        textposition=["middle right" if side == "left" else "middle left"
+                      for *_, side in events],
+        mode="text", textfont=dict(size=13, color=EVENT), cliponaxis=False,
+        hoverinfo="skip", showlegend=False)
+    fig.update_yaxes(range=[0, s.max() * 1.12])
     fig.update_layout(title="Trips per month, all 13 stations", height=height,
                       hovermode="x unified",
                       yaxis=dict(tickformat=".2s", showgrid=False, ticks="outside",
