@@ -1,0 +1,9 @@
+pandas>=2.2
+pdfplumber>=0.11
+plotly>=5.24
+pyarrow>=17
+jupyter
+ipykernel
+nbformat
+nbclient
+pyyaml

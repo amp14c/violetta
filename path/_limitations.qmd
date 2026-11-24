@@ -1,0 +1,13 @@
+* **Faregate entries are not unique people.** A daily commuter makes about 40 trips a
+  month. Fare evasion, cross-honored and freewheeled entries are not counted.
+* **Closures show up as near-zero values, not as missing data.** Examples: WTC and Exchange
+  Place weekends in much of 2014, Hoboken in February 2025 (about 2,700 a weekday and zero on
+  weekends), and low WTC weekend values in 2019. They're real counts, but they pull
+  averages down.
+* **Hourly data starts in 2017**, plus one-month snapshots for July 2014 and November 2016.
+  Exits are only available in the hourly data.
+* **The current year is partial** (through the latest published month).
+* **Fare-system change.** The move from old turnstiles to TAPP faregates (2023–25) changed
+  the counting equipment. Small shifts in that period may partly reflect measurement.
+* **Rounding.** The PDFs round averages to whole people, so sums of hourly values can be off
+  by a few.

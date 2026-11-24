@@ -45,3 +45,19 @@ serviceAccountKey.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---------------------------------------------------------------- data portfolio (Quarto)
+# Python virtual env and caches
+.venv/
+__pycache__/
+# Quarto build output and temp files (the site is published to the gh-pages branch)
+_site/
+_book/
+/.quarto/
+**/*.quarto_ipynb
+# Local tool settings
+.claude/
+# PATH source PDFs (public, ~23 MB): re-download with scripts/01_download.py
+data/raw/pdf/
+# Citi Bike raw downloads and working database (large)
+data/raw/citibike/
